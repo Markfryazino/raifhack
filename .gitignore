@@ -1,6 +1,10 @@
 data/
+saved_models/
+submissions/
 
 .vscode/
 wandb/
 __pycache__/
 ipynb-checkpoints/
+poetry.lock
+*.log
