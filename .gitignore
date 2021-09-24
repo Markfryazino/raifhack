@@ -1,0 +1,6 @@
+data/
+
+.vscode/
+wandb/
+__pycache__/
+ipynb-checkpoints/
