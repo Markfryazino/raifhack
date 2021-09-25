@@ -41,7 +41,6 @@ def baseline_train(t0, t1, mp, v0=None, v1=None, p1=None, run=None, **kwargs):
         mmetrics = metrics_stat(y_manual.values, predictions_manual)
         logger.info(f'Metrics stat for training data with manual prices: {mmetrics}')
 
-
     except Exception as e:
         err = format_exc()
         logger.error(err)
@@ -54,7 +53,7 @@ def baseline_train(t0, t1, mp, v0=None, v1=None, p1=None, run=None, **kwargs):
     }
 
 
-def baseline_predict(p1, mp, o, run=None, **kwargs):
+def baseline_predict(p1, mp, o=None, run=None, **kwargs):
     try:
         logger.info('START predict.py')
         logger.info('Load test df')
@@ -67,11 +66,12 @@ def baseline_predict(p1, mp, o, run=None, **kwargs):
         logger.info('Predict')
         test_df['per_square_meter_price'] = model.predict(test_df[NUM_FEATURES+CATEGORICAL_OHE_FEATURES+CATEGORICAL_STE_FEATURES])
         logger.info('Save results')
-        test_df[['id','per_square_meter_price']].to_csv(o, index=False)
+        if o is not None:
+            test_df[['id','per_square_meter_price']].to_csv(o, index=False)
     except Exception as e:
         err = format_exc()
         logger.error(err)
         raise (e)
 
     logger.info('END predict.py')
-    return o, {}
+    return o, test_df, {}

@@ -3,28 +3,51 @@ import numpy as np
 import wandb
 import logging
 import os
+import sys
+import datetime
 
 from sklearn.model_selection import train_test_split
 
 from model.raif_hack.metrics import metrics_stat
 from model.raif_hack.settings import LOGGING_CONFIG
+from model.baseline import baseline_predict, baseline_train
+
+
+# LOGGING_FILENAME = "pipeline" + datetime.datetime.now().strftime(format="D%d-%H:%M:%S") + ".log"
+# LOGGING_FILENAME = "logs/pipeline.log"
+# LOGGING_CONFIG["handlers"]["file_handler"]["filename"] = LOGGING_FILENAME
+# logging.config.dictConfig(LOGGING_CONFIG)
+# logger = logging.getLogger(__name__)
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
+handler = logging.StreamHandler(sys.stdout)
+handler.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+
+TARGET_NAME = "per_square_meter_price"
 
 
 def read_data(split_data_path="data/split_data"):
-    f0 = pd.read(os.path.join(split_data_path + "t0.csv"))
-    f1 = pd.read(os.path.join(split_data_path + "t1.csv"))
+    f0 = pd.read_csv(os.path.join(split_data_path, "t0.csv"))
+    f1 = pd.read_csv(os.path.join(split_data_path, "t1.csv"))
 
-    p1 = pd.read(os.path.join(split_data_path + "p1.csv"))
+    p1 = pd.read_csv(os.path.join(split_data_path, "p1.csv"))
     
     return f0, f1, p1
 
 
-def create_run(**kwargs):
+def create_run(config, **kwargs):
     wandb.login()
     run = wandb.init(
         entity="fencepainters",
         project="raifhack",
         job_type="pipeline",
+        config=config,
+        save_code=True,
         **kwargs
     )
 
@@ -34,10 +57,65 @@ def create_run(**kwargs):
     return run
 
 
-def train_test_split(f0, f1):
-    t0, v0 = train_test_split(f0, test_size=0.2, shuffle=True, random_state=42)
-    t1, v1 = train_test_split(f1, test_size=0.25, shuffle=True, random_state=42)
+def train_test_split(run, f0, f1):
+    f0["date"] = f0["date"].apply(pd.to_datetime)
+    f1["date"] = f1["date"].apply(pd.to_datetime)
+
+    split_date = "2020-07-01 00:00:00"
+    t0 = f0.loc[f0["date"] < datetime.datetime.strptime(split_date, "%Y-%m-%d %H:%M:%S")].sample(frac=1., random_state=42)
+    v0 = f0.loc[f0["date"] >= datetime.datetime.strptime(split_date, "%Y-%m-%d %H:%M:%S")].sample(frac=1., random_state=42)
+    t1 = f1.loc[f1["date"] < datetime.datetime.strptime(split_date, "%Y-%m-%d %H:%M:%S")].sample(frac=1., random_state=42)
+    v1 = f1.loc[f1["date"] >= datetime.datetime.strptime(split_date, "%Y-%m-%d %H:%M:%S")].sample(frac=1., random_state=42)
+
+    wandb.log({
+        "split_date": split_date,
+        "t0_shape": t0.shape,
+        "t1_shape": t1.shape,
+        "v0_shape": v0.shape,
+        "v1_shape": v1.shape,
+        "0_val_frac": v0.shape[0] / f0.shape[0],
+        "1_val_frac": v1.shape[0] / f1.shape[0]
+    })
 
     return t0, v0, t1, v1
 
 
+
+def pipeline(config, run_kwargs):
+    logger.info("START PIPELINE")
+
+    run = create_run(config, **run_kwargs)
+    f0, f1, p1 = read_data(config["data_path"])
+
+    logger.info("START TRAIN TEST SPLIT")
+    t0, v0, t1, v1 = train_test_split(run, f0, f1)
+
+    logger.info("START TRAINING")
+    mp, train_logs = baseline_train(t0, t1, config["model_path"])
+    wandb.log({"train_logs": train_logs})
+
+    logger.info("START PREDICTION")
+    v1_o, v1_pred, v1_logs = baseline_predict(v1, mp)
+    p1_o, p1_pred, p1_logs = baseline_predict(p1, mp, config["submission_path"])
+
+    v1_metrics = metrics_stat(v1[TARGET_NAME].values, v1_pred[TARGET_NAME].values)
+    wandb.log({
+        "v1_predict_logs": v1_logs,
+        "p1_predict_logs": p1_logs,
+        "v1_metrics":v1_metrics
+    })
+
+    logger.info("FINISH")
+    wandb.save(config["model_path"])
+    wandb.save(config["submission_path"])
+    wandb.finish()
+
+
+CONFIG = {
+    "model_path": "saved_models/dummy.pkl",
+    "submission_path": "submissions/pipeline_submit.csv",
+    "data_path": "data/split_data"
+}
+
+if __name__ == "__main__":
+    pipeline(CONFIG, {})

@@ -13,3 +13,4 @@ __pycache__/
 ipynb-checkpoints/
 poetry.lock
 *.log
+catboost_info/
