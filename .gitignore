@@ -14,3 +14,5 @@ ipynb-checkpoints/
 poetry.lock
 *.log
 catboost_info/
+
+.DS_Store

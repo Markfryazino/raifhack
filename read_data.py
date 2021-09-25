@@ -4,4 +4,4 @@ wandb.login()
 
 api = wandb.Api()
 artifact = api.artifact('fencepainters/raifhack/SplitDataset:latest')
-artifact.download(root="eden/data/split_data")
+artifact.download(root="data/split_data")
