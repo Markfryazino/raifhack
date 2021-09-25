@@ -22,6 +22,9 @@ matplotlib = "^3.4.3"
 catboost = "^0.26.1"
 plotly = "^5.3.1"
 
+
+[tool.poetry.dev-dependencies]
+tqdm = "^4.62.3"
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"

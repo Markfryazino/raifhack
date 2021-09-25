@@ -6,6 +6,7 @@ import pandas as pd
 from model.baseline import baseline_train, baseline_predict
 from model.correction.better_corr import better_corr_baseline_train, better_corr_baseline_predict
 from model.xgboosting.entrypoint import eternal_sunshine_train, eternal_sunshine_predict
+from model.batya.entrypoint import batya_train, batya_predict
 
 
 def parse_args():
@@ -45,7 +46,7 @@ def main():
         if args[cur_name] is not None:
             other[cur_name] = pd.read_csv(args[cur_name])
     
-    eternal_sunshine_train(t0, t1, args["mp"], **other, **TRAIN_KWARGS)
+    batya_train(t0, t1, args["mp"], **other)#, **TRAIN_KWARGS)
 
 if __name__ == "__main__":
     main()

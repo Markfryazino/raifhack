@@ -16,6 +16,8 @@ from model.correction.better_corr import better_corr_baseline_train
 
 from model.baseline import baseline_predict, baseline_train
 from model.xgboosting.entrypoint import eternal_sunshine_predict, eternal_sunshine_train
+from model.batya.entrypoint import batya_predict, batya_train
+
 
 
 # LOGGING_FILENAME = "pipeline" + datetime.datetime.now().strftime(format="D%d-%H:%M:%S") + ".log"
@@ -56,21 +58,21 @@ def create_run(config, **kwargs):
         **kwargs
     )
 
-    artifact = run.use_artifact("SplitDataset:latest")
-    artifact.download(root="data/split_data")
+    artifact = run.use_artifact("BatyaDataset:latest")
+    # artifact.download(root="data/split_data")
 
     return run
 
 
 def train_test_split(run, f0, f1):
-    f0["date"] = f0["date"].apply(pd.to_datetime)
-    f1["date"] = f1["date"].apply(pd.to_datetime)
+    f0_date = f0["date"].apply(lambda x: pd.to_datetime(x))
+    f1_date = f1["date"].apply(lambda x: pd.to_datetime(x, format="%Y%m%d"))
 
     split_date = "2020-07-01 00:00:00"
-    t0 = f0.loc[f0["date"] < datetime.datetime.strptime(split_date, "%Y-%m-%d %H:%M:%S")].sample(frac=1., random_state=42)
-    v0 = f0.loc[f0["date"] >= datetime.datetime.strptime(split_date, "%Y-%m-%d %H:%M:%S")].sample(frac=1., random_state=42)
-    t1 = f1.loc[f1["date"] < datetime.datetime.strptime(split_date, "%Y-%m-%d %H:%M:%S")].sample(frac=1., random_state=42)
-    v1 = f1.loc[f1["date"] >= datetime.datetime.strptime(split_date, "%Y-%m-%d %H:%M:%S")].sample(frac=1., random_state=42)
+    t0 = f0.loc[f0_date < datetime.datetime.strptime(split_date, "%Y-%m-%d %H:%M:%S")].sample(frac=1., random_state=42)
+    v0 = f0.loc[f0_date >= datetime.datetime.strptime(split_date, "%Y-%m-%d %H:%M:%S")].sample(frac=1., random_state=42)
+    t1 = f1.loc[f1_date < datetime.datetime.strptime(split_date, "%Y-%m-%d %H:%M:%S")].sample(frac=1., random_state=42)
+    v1 = f1.loc[f1_date >= datetime.datetime.strptime(split_date, "%Y-%m-%d %H:%M:%S")].sample(frac=1., random_state=42)
 
     wandb.log({
         "split_date": split_date,
@@ -96,14 +98,18 @@ def pipeline(config, run_kwargs):
     t0, v0, t1, v1 = train_test_split(run, f0, f1)
 
     logger.info("START TRAINING")
-    mp, train_logs = config["train_method"](t0, t1, config["model_path"], v0=v0, v1=v1, **config["train_kwargs"])
+    # mp, train_logs = config["train_method"](t0, t1, config["model_path"], v0=v0, v1=v1, )#**config["train_kwargs"])
+    mp, train_logs = config["model_path"], {}
+    
     wandb.log({"train_logs": train_logs})
 
     logger.info("START PREDICTION")
-    v1_o, v1_pred, v1_logs = config["predict_method"](v1, mp)
+    v1_target = v1[TARGET_NAME].values
+    new_v1 = v1.drop(columns=[TARGET_NAME])
+    v1_o, v1_pred, v1_logs = config["predict_method"](new_v1, mp)
     p1_o, p1_pred, p1_logs = config["predict_method"](p1, mp, config["submission_path"])
 
-    v1_metrics = metrics_stat(v1[TARGET_NAME].values, v1_pred[TARGET_NAME].values)
+    v1_metrics = metrics_stat(v1_target, v1_pred[TARGET_NAME].values)
     wandb.log({
         "v1_predict_logs": v1_logs,
         "p1_predict_logs": p1_logs,
@@ -119,16 +125,16 @@ def pipeline(config, run_kwargs):
 CONFIG = {
     "model_path": "saved_models/dummy.pkl",
     "submission_path": "submissions/pipeline_submit.csv",
-    "data_path": "data/split_data",
-    "train_method": eternal_sunshine_train,
-    "predict_method": eternal_sunshine_predict,
-    "train_kwargs": {
-        "xgboost_params": {
-            'objective': 'reg:squarederror'
-        },
-        "num_trees": 7,
-        "use_wandb": True
-    }
+    "data_path": "data/batya_data",
+    "train_method": batya_train,
+    "predict_method": batya_predict,
+    # "train_kwargs": {
+    #     "xgboost_params": {
+    #         'objective': 'reg:squarederror'
+    #     },
+    #     "num_trees": 7,
+    #     "use_wandb": True
+    # }
 }
 
 if __name__ == "__main__":
