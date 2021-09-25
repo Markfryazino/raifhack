@@ -4,6 +4,8 @@ import pandas as pd
 import numpy as np
 import logging
 
+from wandb.lightgbm import wandb_callback
+
 from lightgbm import LGBMRegressor
 
 from sklearn.compose import ColumnTransformer
@@ -78,7 +80,7 @@ class BenchmarkModel():
         :param y_manual: pd.Series - цены ручника
         """
         logger.info('Fit lightgbm')
-        self.pipeline.fit(X_offer, y_offer, model__feature_name=[f'{i}' for i in range(70)],model__categorical_feature=['67','68','69'])
+        self.pipeline.fit(X_offer, y_offer, model__feature_name=[f'{i}' for i in range(70)],model__categorical_feature=['67','68','69'],model__callbacks=[wandb_callback()])
         logger.info('Find corr coefficient')
         self._find_corr_coefficient(X_manual, y_manual)
         logger.info(f'Corr coef: {self.corr_coef:.2f}')

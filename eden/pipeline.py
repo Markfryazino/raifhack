@@ -10,6 +10,10 @@ from sklearn.model_selection import train_test_split
 
 from model.raif_hack.metrics import metrics_stat
 from model.raif_hack.settings import LOGGING_CONFIG
+
+from model.correction.better_corr import better_corr_baseline_predict
+from model.correction.better_corr import better_corr_baseline_train
+
 from model.baseline import baseline_predict, baseline_train
 
 
@@ -91,12 +95,12 @@ def pipeline(config, run_kwargs):
     t0, v0, t1, v1 = train_test_split(run, f0, f1)
 
     logger.info("START TRAINING")
-    mp, train_logs = baseline_train(t0, t1, config["model_path"])
+    mp, train_logs = better_corr_baseline_train(t0, t1, config["model_path"])
     wandb.log({"train_logs": train_logs})
 
     logger.info("START PREDICTION")
-    v1_o, v1_pred, v1_logs = baseline_predict(v1, mp)
-    p1_o, p1_pred, p1_logs = baseline_predict(p1, mp, config["submission_path"])
+    v1_o, v1_pred, v1_logs = better_corr_baseline_predict(v1, mp)
+    p1_o, p1_pred, p1_logs = better_corr_baseline_predict(p1, mp, config["submission_path"])
 
     v1_metrics = metrics_stat(v1[TARGET_NAME].values, v1_pred[TARGET_NAME].values)
     wandb.log({
