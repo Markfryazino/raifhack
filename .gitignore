@@ -1,6 +1,8 @@
-data/
-saved_models/
-submissions/
+eden/data/*
+eden/saved_models/*
+eden/submissions/*
+
+!README.md
 
 .vscode/
 wandb/
