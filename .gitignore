@@ -2,6 +2,7 @@ eden/data/*
 eden/saved_models/*
 eden/submissions/*
 eden/logs/*
+zips/
 
 !README.md
 

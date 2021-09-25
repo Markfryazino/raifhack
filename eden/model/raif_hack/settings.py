@@ -42,13 +42,13 @@ NUM_FEATURES = ['lat', 'lng', 'osm_amenity_points_in_0.001',
        'reform_mean_year_building_1000', 'reform_mean_year_building_500','total_square']
 
 MODEL_PARAMS = dict(
-            n_estimators=2000,
+            n_estimators=5000,
             learning_rate=0.01,
             reg_alpha=1,
             num_leaves=40,
             min_child_samples=5,
             importance_type="gain",
-            n_jobs=1,
+            n_jobs=-1,
             random_state=563,
         )
 
