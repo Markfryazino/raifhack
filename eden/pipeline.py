@@ -15,6 +15,7 @@ from model.correction.better_corr import better_corr_baseline_predict
 from model.correction.better_corr import better_corr_baseline_train
 
 from model.baseline import baseline_predict, baseline_train
+from model.xgboosting.entrypoint import eternal_sunshine_predict, eternal_sunshine_train
 
 
 # LOGGING_FILENAME = "pipeline" + datetime.datetime.now().strftime(format="D%d-%H:%M:%S") + ".log"
@@ -89,18 +90,18 @@ def pipeline(config, run_kwargs):
     logger.info("START PIPELINE")
 
     run = create_run(config, **run_kwargs)
-    f0, f1, p1 = read_data(config["data_path"])
 
+    f0, f1, p1 = read_data(config["data_path"])
     logger.info("START TRAIN TEST SPLIT")
     t0, v0, t1, v1 = train_test_split(run, f0, f1)
 
     logger.info("START TRAINING")
-    mp, train_logs = better_corr_baseline_train(t0, t1, config["model_path"])
+    mp, train_logs = config["train_method"](t0, t1, config["model_path"], v0=v0, v1=v1, **config["train_kwargs"])
     wandb.log({"train_logs": train_logs})
 
     logger.info("START PREDICTION")
-    v1_o, v1_pred, v1_logs = better_corr_baseline_predict(v1, mp)
-    p1_o, p1_pred, p1_logs = better_corr_baseline_predict(p1, mp, config["submission_path"])
+    v1_o, v1_pred, v1_logs = config["predict_method"](v1, mp)
+    p1_o, p1_pred, p1_logs = config["predict_method"](p1, mp, config["submission_path"])
 
     v1_metrics = metrics_stat(v1[TARGET_NAME].values, v1_pred[TARGET_NAME].values)
     wandb.log({
@@ -118,7 +119,15 @@ def pipeline(config, run_kwargs):
 CONFIG = {
     "model_path": "saved_models/dummy.pkl",
     "submission_path": "submissions/pipeline_submit.csv",
-    "data_path": "data/split_data"
+    "data_path": "data/split_data",
+    "train_method": eternal_sunshine_train,
+    "predict_method": eternal_sunshine_predict,
+    "train_kwargs": {
+        "xgboost_params": {
+            'objective': 'reg:squarederror'
+        },
+        "num_trees": 100,
+    }
 }
 
 if __name__ == "__main__":
