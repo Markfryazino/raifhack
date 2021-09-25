@@ -66,6 +66,10 @@ def apply_floor(x):
         x = 228
     return x
 
+def fill_median_by_category(df, fill_column, category_column):
+    df[fill_column] = df.groupby(category_column).transform(lambda x: x.fillna(x.median()))
+    return df
+
 def fill_mean_by_cluster(df, fill_column, cluster_column):
     df[fill_column] = df.groupby(cluster_column).transform(lambda x: x.fillna(x.mean()))
     return df
@@ -79,4 +83,24 @@ def floor_update(df):
 
 def preprocessing(df):
     df = floor_update(df)
+
+    df = df[df["osm_city_nearest_population"].notna()]
+
+    df['reform_house_population_1000'].fillna(df['reform_house_population_500'],inplace=True)
+    df['reform_house_population_500'].fillna(df['reform_house_population_1000'],inplace=True)
+    df["reform_house_population_1000"].fillna(0,inplace=True)
+    df["reform_house_population_500"].fillna(1,inplace=True)
+
+    df['reform_mean_floor_count_1000'].fillna(df['reform_mean_floor_count_500'],inplace=True)
+    df['reform_mean_floor_count_500'].fillna(df['reform_mean_floor_count_1000'],inplace=True)
+    df["reform_mean_floor_count_1000"].fillna(1,inplace=True)
+    df["reform_mean_floor_count_500"].fillna(1,inplace=True)
+
+    df['reform_mean_year_building_1000'].fillna(df['reform_mean_year_building_500'],inplace=True)
+    df['reform_mean_year_building_500'].fillna(df['reform_mean_year_building_1000'],inplace=True)
+    df = fill_median_by_category(df, "reform_mean_year_building_1000", "region")
+    df = fill_median_by_category(df, "reform_mean_year_building_500", "region")
+
+    df["street"] = df["street"].fillna('missing')
+
     return df
