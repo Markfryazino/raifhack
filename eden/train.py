@@ -5,6 +5,7 @@ import pandas as pd
 
 from model.baseline import baseline_train, baseline_predict
 from model.correction.better_corr import better_corr_baseline_train, better_corr_baseline_predict
+from model.xgboosting.entrypoint import eternal_sunshine_train, eternal_sunshine_predict
 
 
 def parse_args():
@@ -24,6 +25,16 @@ def train(t0, t1, mp, v0=None, v1=None, p1=None, run=None, **kwargs):
     pass
 
 
+TRAIN_KWARGS = {
+    "xgboost_params": {
+        'objective': 'reg:squarederror'
+    },
+    "num_trees": 7,
+    "use_wandb": False
+}
+
+
+
 def main():
     args = vars(parse_args())
     t0 = pd.read_csv(args["t0"])
@@ -34,7 +45,7 @@ def main():
         if args[cur_name] is not None:
             other[cur_name] = pd.read_csv(args[cur_name])
     
-    better_corr_baseline_train(t0, t1, args["mp"], **other)
+    eternal_sunshine_train(t0, t1, args["mp"], **other, **TRAIN_KWARGS)
 
 if __name__ == "__main__":
     main()

@@ -126,7 +126,8 @@ CONFIG = {
         "xgboost_params": {
             'objective': 'reg:squarederror'
         },
-        "num_trees": 100,
+        "num_trees": 7,
+        "use_wandb": True
     }
 }
 

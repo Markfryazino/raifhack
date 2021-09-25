@@ -20,7 +20,8 @@ def eternal_sunshine_train(t0, t1, mp, v0=None, v1=None, p1=None, run=None, **kw
     _v1 = None if v1 is None else v1.copy()
     _p1 = None if p1 is None else p1.copy()
 
-    model = EternalSunshineModel(model_params=kwargs["xgboost_params"], num_trees=kwargs["num_trees"])
+    model = EternalSunshineModel(model_params=kwargs["xgboost_params"], num_trees=kwargs["num_trees"],
+                                 use_wandb=kwargs["use_wandb"])
     logger.info('Fit model')
     model.fit(_t0, _t1, _v0, _v1)
     logger.info('Save model')

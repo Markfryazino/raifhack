@@ -5,6 +5,7 @@ import pandas as pd
 
 from model.baseline import baseline_train, baseline_predict
 from model.correction.better_corr import better_corr_baseline_predict, better_corr_baseline_train
+from model.xgboosting.entrypoint import eternal_sunshine_train, eternal_sunshine_predict
 
 
 def parse_args():
@@ -23,7 +24,7 @@ def predict(p1, mp, o, run=None, **kwargs):
 def main():
     args = vars(parse_args())
     p1 = pd.read_csv(args["p1"])
-    better_corr_baseline_predict(p1, args["mp"], args["o"])
+    eternal_sunshine_predict(p1, args["mp"], args["o"])
 
 if __name__ == "__main__":
     main()
