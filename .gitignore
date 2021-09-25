@@ -1,6 +1,12 @@
-data/
+eden/data/*
+eden/saved_models/*
+eden/submissions/*
+
+!README.md
 
 .vscode/
 wandb/
 __pycache__/
 ipynb-checkpoints/
+poetry.lock
+*.log
