@@ -1,1 +1,1 @@
-# Здесь логи
+# This is a folder for logs.

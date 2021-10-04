@@ -1,1 +1,1 @@
-# Здесь будут наши сабмиты
+# This is a folder for our submissions.

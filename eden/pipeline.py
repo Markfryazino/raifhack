@@ -128,13 +128,13 @@ CONFIG = {
     "data_path": "data/batya_data",
     "train_method": batya_train,
     "predict_method": batya_predict,
-    # "train_kwargs": {
-    #     "xgboost_params": {
-    #         'objective': 'reg:squarederror'
-    #     },
-    #     "num_trees": 7,
-    #     "use_wandb": True
-    # }
+     "train_kwargs": {
+         "xgboost_params": {
+             'objective': 'reg:squarederror'
+         },
+         "num_trees": 7,
+         "use_wandb": True
+     }
 }
 
 if __name__ == "__main__":

@@ -1,1 +1,1 @@
-# Здесь будут наши модели
+# This is a folder for trained models.

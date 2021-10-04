@@ -1,1 +1,1 @@
-# Здесь будут наши данные
+# This is a folder for logs.
