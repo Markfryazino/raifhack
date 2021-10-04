@@ -5,7 +5,7 @@ The hackathon's goal was to build a model for predicting the value of commercial
 
 To run the model, you need to do the following:
 
-1. Go to [Eden](./Eden) directory.
+1. Go to [Eden](./eden) directory.
 ```
 cd eden
 ```
